@@ -294,7 +294,7 @@ def main():
     parser.add_argument('--sigma-xy',type=float,default=80.0,
                         help='DenseCRF sigma_xy')
     
-
+    parser.add_argument('--psdgts_dir', type=str, default='_test')
     args = parser.parse_args()
     
     args.cuda = not args.no_cuda and torch.cuda.is_available()
