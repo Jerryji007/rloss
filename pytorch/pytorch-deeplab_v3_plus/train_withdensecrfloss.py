@@ -117,7 +117,10 @@ class Trainer(object):
             self.optimizer.zero_grad()
             output = self.model(image)
             
-            celoss = self.criterion(output, target)
+            if self.args.loss_type == 'mse':
+                celoss = self.criterion(output, target, i)
+            else:
+                celoss = self.criterion(output, target)
             
             if self.args.densecrfloss ==0:
                 loss = celoss
@@ -230,9 +233,9 @@ def main():
                         help='whether to use sync bn (default: auto)')
     parser.add_argument('--freeze-bn', type=bool, default=False,
                         help='whether to freeze bn parameters (default: False)')
-    parser.add_argument('--loss-type', type=str, default='ce',
-                        choices=['ce', 'focal'],
-                        help='loss func type (default: ce)')
+    parser.add_argument('--loss-type', type=str, default='mse',
+                        choices=['ce', 'focal', 'mse'],
+                        help='loss func type (default: mse)')
     # training hyper params
     parser.add_argument('--epochs', type=int, default=None, metavar='N',
                         help='number of epochs to train (default: auto)')

@@ -1,6 +1,9 @@
 import torch
 import torch.nn as nn
 
+import torch
+import torch.nn as nn
+
 class SegmentationLosses(object):
     def __init__(self, weight=None, reduction_mode='mean', batch_average=True, ignore_index=255, cuda=False):
         self.ignore_index = ignore_index
@@ -15,6 +18,8 @@ class SegmentationLosses(object):
             return self.CrossEntropyLoss
         elif mode == 'focal':
             return self.FocalLoss
+        elif mode == 'mse':
+            return self.MSELoss
         else:
             raise NotImplementedError
 
@@ -44,6 +49,90 @@ class SegmentationLosses(object):
         if alpha is not None:
             logpt *= alpha
         loss = -((1 - pt) ** gamma) * logpt
+
+        if self.batch_average:
+            loss /= n
+
+        return loss
+
+    def MSELossT(self, logit, target, epoch):
+        n, c, h, w = logit.size()
+        criterion = nn.Softmax(dim=1)
+
+
+        if self.cuda:
+            criterion = criterion.cuda()
+
+        target = target.flatten()
+        target_mask = (target >= 0) & (target < c)
+
+        target = target[target_mask].long()
+
+        y = torch.eye(c)
+        one_hot = y[target]
+
+        if self.cuda:
+            one_hot = one_hot.cuda()
+
+        probs = criterion(logit)
+        #probs = logit
+
+        probs = probs.transpose(1, 2)
+        probs = probs.transpose(2, 3)
+
+        probs = probs.reshape(n*w*h, c)
+
+        probs = probs[target_mask, :]
+
+        epsilon = 0.00000001
+        threshold = torch.tensor(15.0).cuda()
+        loss = torch.sum(torch.min(-torch.log(probs + epsilon)*one_hot, threshold))/probs.size()[0]
+
+        if self.batch_average:
+            loss /= n
+
+        return loss
+
+
+    def MSELoss(self, logit, target, current_epoch, total_epoch=100.):
+        n, c, h, w = logit.size()
+        criterion = nn.Softmax(dim=1)
+
+
+        if self.cuda:
+            criterion = criterion.cuda()
+
+        target = target.flatten()
+        target_mask = (target >= 0) & (target < c)
+
+        target = target[target_mask].long()
+
+        y = torch.eye(c)
+        one_hot = y[target]
+
+        if self.cuda:
+            one_hot = one_hot.cuda()
+
+        probs = criterion(logit)
+
+        probs = probs.transpose(1, 2)
+        probs = probs.transpose(2, 3)
+        probs = probs.reshape(n*w*h, c)
+        probs = probs[target_mask, :]
+
+       # loss =  torch.sum(((one_hot * probs - one_hot)) ** 2)/probs.size()[0]
+
+        #loss = torch.sum( torch.sum(torch.abs(one_hot - probs)) ) / probs.size()[0]
+
+
+        #print("1", torch.sum(one_hot * probs, dim=1) , "2",torch.sum(one_hot * probs) ** 0.5 )
+
+        #loss = torch.sum(( 1 - (torch.sum(one_hot * probs, dim=1) ** 0.3))/0.3) / probs.size()[0]
+
+        current_num = 0.1 + 0.3 * (current_epoch / (total_epoch - 1))
+
+        loss = torch.sum((1 - (torch.sum(one_hot * probs, dim=1) ** current_num)) / current_num) / probs.size()[0]
+
 
         if self.batch_average:
             loss /= n
