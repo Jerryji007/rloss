@@ -118,7 +118,7 @@ class Trainer(object):
             output = self.model(image)
             
             if self.args.loss_type == 'mse':
-                celoss = self.criterion(output, target, i)
+                celoss = self.criterion(output, target, epoch)
             else:
                 celoss = self.criterion(output, target)
             
@@ -176,7 +176,10 @@ class Trainer(object):
                 image, target = image.cuda(), target.cuda()
             with torch.no_grad():
                 output = self.model(image)
-            loss = self.criterion(output, target)
+            if self.args.loss_type == 'mse':
+                loss = self.criterion(output, target, epoch)
+            else:
+                loss = self.criterion(output, target)
             test_loss += loss.item()
             tbar.set_description('Test loss: %.3f' % (test_loss / (i + 1)))
             pred = output.data.cpu().numpy()
