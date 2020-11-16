@@ -54,3 +54,5 @@ exper/*/log
 *.mexa64
 
 *.DS_Store
+data/VOC2012/VOCdevkit
+pytorch/wrapper/bilateralfilter/build/

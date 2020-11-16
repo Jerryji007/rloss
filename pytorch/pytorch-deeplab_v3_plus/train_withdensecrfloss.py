@@ -118,7 +118,7 @@ class Trainer(object):
             output = self.model(image)
             
             if self.args.loss_type == 'mse':
-                celoss = self.criterion(output, target, epoch)
+                celoss = self.criterion(output, target, epoch, total_epoch = self.args.epochs)
             else:
                 celoss = self.criterion(output, target)
             
