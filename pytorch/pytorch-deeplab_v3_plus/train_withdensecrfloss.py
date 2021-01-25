@@ -102,7 +102,7 @@ class Trainer(object):
         train_celoss = 0.0
         train_crfloss = 0.0
         self.model.train()
-        tbar = tqdm(self.train_loader)
+        tbar = tqdm(self.train_loader, disable=True)
         num_img_tr = len(self.train_loader)
         softmax = nn.Softmax(dim=1)
         for i, sample in enumerate(tbar):

@@ -96,7 +96,7 @@ def main():
     model.eval()
     
     composed_transforms = transforms.Compose([
-            tr.FixScaleCropImage(crop_size=args.crop_size),
+            tr.FixScaleCropImage1(crop_size=args.crop_size),
             tr.NormalizeImage(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
             tr.ToTensorImage()])
     image = composed_transforms(Image.open(args.image_path).convert('RGB')).unsqueeze(0)
